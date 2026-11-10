@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import aiohttp
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiohttp import web
@@ -34,12 +35,31 @@ async def start_web_server():
     await site.start()
     logging.info(f"Web server {port}-portda ishga tushdi.")
 
+async def keep_alive():
+    """Render bepul tarifida bot uxlab qolmasligi uchun o'z-o'ziga so'rov yuborib turadi."""
+    external_url = os.getenv("RENDER_EXTERNAL_URL")
+    if not external_url:
+        return
+    
+    logging.info(f"Render Keep-Alive faollashdi: {external_url}")
+    await asyncio.sleep(60)
+    
+    async with aiohttp.ClientSession() as session:
+        while True:
+            try:
+                async with session.get(external_url) as resp:
+                    logging.info(f"Keep-alive ping muvaffaqiyatli: {resp.status}")
+            except Exception as e:
+                logging.warning(f"Keep-alive ping xatosi: {e}")
+            await asyncio.sleep(600)
+
 async def main():
     logging.basicConfig(level=logging.INFO)
     
-    # Render bepul Web Service port tekshiruvidan o'tishi uchun veb-server
+    # Render bepul Web Service port tekshiruvidan o'tishi uchun veb-server va keep-alive
     if os.getenv("PORT"):
         await start_web_server()
+        asyncio.create_task(keep_alive())
 
     print("Bot muvaffaqiyatli ishga tushdi va xabarlarni kutmoqda...")
     await dp.start_polling(bot)

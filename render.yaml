@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: telegram-1-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: BOT_TOKEN
+        value: 8740002148:AAFKrFZvJ__pR3Phgw19-7T4BargIsV8IBs
+      - key: PYTHON_VERSION
+        value: 3.11.9
