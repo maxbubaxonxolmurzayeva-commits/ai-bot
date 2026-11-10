@@ -3,6 +3,7 @@ import logging
 import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
+from aiohttp import web
 
 # Bot kaliti (Token) - Muhit o'zgaruvchisidan yoki to'g'ridan-to'g'ri olinadi
 BOT_TOKEN = os.getenv("BOT_TOKEN", "8740002148:AAFKrFZvJ__pR3Phgw19-7T4BargIsV8IBs")
@@ -20,8 +21,26 @@ async def handle_start(message: types.Message):
 
     await message.answer(response_text)
 
+async def health_check(request):
+    return web.Response(text="Bot muvaffaqiyatli ishlamoqda!")
+
+async def start_web_server():
+    port = int(os.getenv("PORT", 8080))
+    app = web.Application()
+    app.router.add_get("/", health_check)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    logging.info(f"Web server {port}-portda ishga tushdi.")
+
 async def main():
     logging.basicConfig(level=logging.INFO)
+    
+    # Render bepul Web Service port tekshiruvidan o'tishi uchun veb-server
+    if os.getenv("PORT"):
+        await start_web_server()
+
     print("Bot muvaffaqiyatli ishga tushdi va xabarlarni kutmoqda...")
     await dp.start_polling(bot)
 
