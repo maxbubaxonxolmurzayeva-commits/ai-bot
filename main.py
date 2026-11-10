@@ -1,10 +1,11 @@
 import asyncio
 import logging
+import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 
-# Bot kaliti (Token)
-BOT_TOKEN = "8740002148:AAFKrFZvJ__pR3Phgw19-7T4BargIsV8IBs"
+# Bot kaliti (Token) - Muhit o'zgaruvchisidan yoki to'g'ridan-to'g'ri olinadi
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8740002148:AAFKrFZvJ__pR3Phgw19-7T4BargIsV8IBs")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
