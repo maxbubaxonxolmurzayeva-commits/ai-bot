@@ -1,5 +1,7 @@
 # 1--bot (Telegram Bot)
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/maxbubaxonxolmurzayeva-commits/1--bot)
+
 Ushbu bot `/start` komandasi yuborilganda:
 - Agar foydalanuvchida username bo'lsa: `Assalomu alekum, @username`
 - Agar username bo'lmasa: `Assalomu alekum, hurmatli mijoz` deb javob beradi.
