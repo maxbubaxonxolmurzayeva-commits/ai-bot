@@ -1,13 +1,17 @@
 services:
   - type: web
-    name: telegram-1-bot
-    runtime: python
+    name: ai-chat-bot
+    env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
-    plan: free
-    region: frankfurt
     envVars:
-      - key: BOT_TOKEN
-        value: 8740002148:AAFKrFZvJ__pR3Phgw19-7T4BargIsV8IBs
       - key: PYTHON_VERSION
-        value: 3.11.9
+        value: 3.12.10
+      - key: BOT_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: ADMIN_ID
+        value: 1948392026

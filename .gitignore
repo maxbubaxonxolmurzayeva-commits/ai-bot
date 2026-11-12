@@ -1,9 +1,11 @@
+.env
+*.db
+memory.db
+temp_files/
 __pycache__/
-*.py[cod]
-*$py.class
-*.env
-.venv/
+*.pyc
+*.pyo
 venv/
-ENV/
+.venv/
 .idea/
 .vscode/

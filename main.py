@@ -1,68 +1,65 @@
 import asyncio
 import logging
 import os
-import aiohttp
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import CommandStart
+import sys
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
 
-# Bot kaliti (Token) - Muhit o'zgaruvchisidan yoki to'g'ridan-to'g'ri olinadi
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8740002148:AAFKrFZvJ__pR3Phgw19-7T4BargIsV8IBs")
+from config import BOT_TOKEN, validate_config
+from handlers import router
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - [%(levelname)s] - %(name)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
 
-@dp.message(CommandStart())
-async def handle_start(message: types.Message):
-    # Foydalanuvchida username bormi yo'qmi tekshiramiz
-    if message.from_user and message.from_user.username:
-        response_text = f"Assalomu alekum, @{message.from_user.username}"
-    else:
-        response_text = "Assalomu alekum, hurmatli mijoz"
-
-    await message.answer(response_text)
-
-async def health_check(request):
-    return web.Response(text="Bot muvaffaqiyatli ishlamoqda!")
+async def handle_ping(request):
+    """Render va Cron-Job uchun salomatlik tekshiruvi (Healthcheck)"""
+    return web.Response(text="Bot is running 24/7!", status=200)
 
 async def start_web_server():
-    port = int(os.getenv("PORT", 8080))
+    """Render Web Service talab qiladigan HTTP portni ochish"""
+    port = int(os.getenv("PORT", "8080"))
     app = web.Application()
-    app.router.add_get("/", health_check)
+    app.router.add_get("/", handle_ping)
+    app.router.add_get("/health", handle_ping)
+    
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-    logging.info(f"Web server {port}-portda ishga tushdi.")
-
-async def keep_alive():
-    """Render bepul tarifida bot uxlab qolmasligi uchun o'z-o'ziga so'rov yuborib turadi."""
-    external_url = os.getenv("RENDER_EXTERNAL_URL")
-    if not external_url:
-        return
-    
-    logging.info(f"Render Keep-Alive faollashdi: {external_url}")
-    await asyncio.sleep(60)
-    
-    async with aiohttp.ClientSession() as session:
-        while True:
-            try:
-                async with session.get(external_url) as resp:
-                    logging.info(f"Keep-alive ping muvaffaqiyatli: {resp.status}")
-            except Exception as e:
-                logging.warning(f"Keep-alive ping xatosi: {e}")
-            await asyncio.sleep(600)
+    logger.info(f"Render Web Server 0.0.0.0:{port} manzilida muvaffaqiyatli ishga tushdi.")
 
 async def main():
-    logging.basicConfig(level=logging.INFO)
+    validate_config()
     
-    # Render bepul Web Service port tekshiruvidan o'tishi uchun veb-server va keep-alive
-    if os.getenv("PORT"):
-        await start_web_server()
-        asyncio.create_task(keep_alive())
+    bot = Bot(
+        token=BOT_TOKEN,
+        default=DefaultBotProperties(parse_mode=None)
+    )
+    dp = Dispatcher()
+    dp.include_router(router)
 
-    print("Bot muvaffaqiyatli ishga tushdi va xabarlarni kutmoqda...")
-    await dp.start_polling(bot)
+    # Eski yangilanishlarni tozalash
+    await bot.delete_webhook(drop_pending_updates=True)
+
+    bot_info = await bot.get_me()
+    logger.info(f"Bot muvaffaqiyatli ishga tushdi: @{bot_info.username}")
+    logger.info("4-bosqich: Google Search, Model Fallback Pool, Audio Q&A, Admin Dashboard.")
+
+    # Render uchun HTTP serverni ishga tushirish
+    await start_web_server()
+
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await bot.session.close()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Bot to'xtatildi.")
